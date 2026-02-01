@@ -19,6 +19,7 @@ interface CommunityInsightsData {
   categoryAverages: CategoryAverage[];
   costOfLivingIndex: CostOfLivingIndex[];
   searchLevel: 'city' | 'country';
+  currencySymbol: string; // <-- added
 }
 
 export function useCommunityInsights() {
@@ -45,26 +46,35 @@ export function useCommunityInsights() {
       let categoryAverages: CategoryAverage[] = [];
       let costOfLivingIndex: CostOfLivingIndex[] = [];
       let searchLevel: 'city' | 'country' = 'country';
+      let currencySymbol = '₹'; // default fallback
 
-      // For the new schema, we simplify to country-level queries
-      // The get_country_averages function works with the new schema
-      const [avgResult, colResult] = await Promise.all([
-        supabase.rpc('get_country_averages', {
-          p_country: country.trim(),
-        }),
-        supabase.rpc('get_cost_of_living_index', {
-          p_country: country.trim(),
-        }),
+      // Fetch averages, cost-of-living, and country currency in parallel
+      const [avgResult, colResult, currencyResult] = await Promise.all([
+        supabase.rpc('get_country_averages', { p_country: country.trim() }),
+        supabase.rpc('get_cost_of_living_index', { p_country: country.trim() }),
+        supabase
+          .from('locations')
+          .select('symbol')
+          .eq('country', country.trim())
+          .limit(1)
+          .single(),
       ]);
 
       if (avgResult.error) throw avgResult.error;
       if (colResult.error) throw colResult.error;
+      if (currencyResult.error) throw currencyResult.error;
 
       categoryAverages = avgResult.data || [];
       costOfLivingIndex = colResult.data || [];
       searchLevel = city ? 'city' : 'country';
+      currencySymbol = currencyResult.data?.symbol || '₹';
 
-      setData({ categoryAverages, costOfLivingIndex, searchLevel });
+      setData({
+        categoryAverages,
+        costOfLivingIndex,
+        searchLevel,
+        currencySymbol,
+      });
     } catch (error: any) {
       toast({
         title: 'Error fetching insights',
