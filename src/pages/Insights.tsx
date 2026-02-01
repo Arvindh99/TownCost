@@ -112,7 +112,7 @@ export default function Insights() {
             costOfLivingIndex={data.costOfLivingIndex}
             searchLevel={data.searchLevel}
             searchLocation={searchLocation}
-            currencySymbol={symbol}
+            currencySymbol={data.currencySymbol}
           />
         )}
       </div>
