@@ -146,11 +146,14 @@ export function InsightsResults({
                 {currencySymbol || '₹'}
                 {latestCOL.cost_index.toLocaleString()}
               </span>
-              <span className="text-muted-foreground">/month (weighted)</span>
+              <span className="text-muted-foreground">/month (per person, weighted)</span>
             </div>
             <p className="text-sm text-muted-foreground mt-2">
               Based on: Rent (35%), Groceries (30%), Transport (15%), Utilities
               (10%), Internet (10%)
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Normalized by household size
             </p>
             {latestMonth && (
               <div className="flex items-center gap-2 mt-3 text-sm text-muted-foreground">
