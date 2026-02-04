@@ -21,67 +21,55 @@ export function useLocations() {
 
 // Get unique countries from locations
 export function useCountries() {
-  const { data: locations, isLoading, error } = useLocations();
+  return useQuery({
+    queryKey: ['countries'],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('v_countries').select('*');
 
-  const countries = locations
-    ? [...new Set(locations.map((l) => l.country))].map((country) => ({
-        id: country,
-        name: country,
-      }))
-    : [];
+      if (error) throw error;
 
-  return { data: countries, isLoading, error };
+      return data.map((row) => ({ id: row.country, name: row.country }));
+    },
+  });
 }
 
 // Get unique states for a country
-export function useStates(country: string | undefined) {
-  const { data: locations, isLoading, error } = useLocations();
+export function useStates(country?: string) {
+  return useQuery({
+    queryKey: ['states', country],
+    queryFn: async () => {
+      if (!country) return [];
+      const { data, error } = await supabase
+        .from('v_states')
+        .select('state')
+        .eq('country', country);
 
-  const states =
-    locations && country
-      ? [
-          ...new Set(
-            locations.filter((l) => l.country === country).map((l) => l.state)
-          ),
-        ].map((state) => ({
-          id: state,
-          name: state,
-        }))
-      : [];
+      if (error) throw error;
 
-  return {
-    data: states,
-    isLoading: isLoading && !!country,
-    error,
-  };
+      return data.map((row) => ({ id: row.state, name: row.state }));
+    },
+    enabled: !!country,
+  });
 }
 
 // Get unique cities for a country and state
-export function useCities(
-  country: string | undefined,
-  state: string | undefined
-) {
-  const { data: locations, isLoading, error } = useLocations();
+export function useCities(country?: string, state?: string) {
+  return useQuery({
+    queryKey: ['cities', country, state],
+    queryFn: async () => {
+      if (!country || !state) return [];
+      const { data, error } = await supabase
+        .from('v_cities')
+        .select('city')
+        .eq('country', country)
+        .eq('state', state);
 
-  const cities =
-    locations && country && state
-      ? [
-          ...new Set(
-            locations
-              .filter((l) => l.country === country && l.state === state)
-              .map((l) => l.city)
-          ),
-        ].map((city) => ({
-          id: city,
-          name: city,
-        }))
-      : [];
+      if (error) throw error;
 
-  return {
-    data: cities,
-    isLoading: isLoading && !!country && !!state,
-    error,
-  };
+      return data.map((row) => ({ id: row.city, name: row.city }));
+    },
+    enabled: !!country && !!state,
+  });
 }
 
 // Get full location record by country, state, city
