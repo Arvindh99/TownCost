@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { TrendingUp, Shield, Users, PieChart } from 'lucide-react';
+import logo from '@/assets/logo_without_bg.png';
 
 export default function Auth() {
   const { authUser, loading } = useAuth();
@@ -34,8 +35,15 @@ export default function Auth() {
       {/* Left side - Branding */}
       <div className="flex-1 gradient-hero p-8 lg:p-12 flex flex-col justify-between text-primary-foreground">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-foreground/10 backdrop-blur">
-            <TrendingUp className="h-6 w-6 text-primary-foreground" />
+          <div
+            className="flex h-9 w-9 items-center justify-center rounded-lg bg-white border border-gray-200
+ backdrop-blur"
+          >
+            <img
+              src={logo}
+              alt="TownCost Logo"
+              className="h-8 w-8 object-contain"
+            />
           </div>
           <span className="font-display text-2xl font-semibold">TownCost</span>
         </div>
@@ -101,7 +109,7 @@ export default function Auth() {
               Welcome to TownCost
             </CardTitle>
             <CardDescription>
-              Sign in with your Email account to start tracking your expenses
+              Sign in with your email account to start tracking your expenses
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
