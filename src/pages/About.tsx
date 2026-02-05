@@ -39,7 +39,7 @@ export default function About() {
               </p>
               <Button asChild className="w-full" variant="outline">
                 <a
-                  href="https://github.com/yourusername/TownCost"
+                  href="https://github.com/Arvindh99/TownCost"
                   target="_blank"
                   rel="noopener noreferrer"
                 >
