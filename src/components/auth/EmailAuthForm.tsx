@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 
 export function EmailAuthForm() {
   const { signIn, signUp } = useAuth();
+
   const [isSignUp, setIsSignUp] = useState(false);
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
@@ -32,27 +33,45 @@ export function EmailAuthForm() {
       if (isSignUp) {
         const { data, error } = await signUp(email, password);
 
-        // Supabase returns data.user === null if signup failed
-        if (error || !data?.user) {
+        // ❌ Real signup error
+        if (error) {
           if (
-            error?.message.includes('already registered') ||
-            error?.message.includes('User already registered') ||
-            (!data?.user && !error)
+            error.message.includes('already registered') ||
+            error.message.includes('User already registered')
           ) {
             toast.error(
               'This email is already registered. Please sign in instead.'
             );
           } else {
-            toast.error(error?.message || 'Signup failed');
+            toast.error(error.message);
           }
-        } else {
-          toast.success('Account created successfully!');
+          return;
         }
+
+        /**
+         * ✅ Email confirmation enabled:
+         * - user === null
+         * - session === null
+         * - NO error
+         */
+        if (!data?.session) {
+          toast.success(
+            'Account created! Please check your email to verify your account.'
+          );
+          setIsSignUp(false); // switch to Sign In
+          return;
+        }
+
+        // (Fallback: if email confirmation is disabled)
+        toast.success('Account created successfully!');
       } else {
         const { error } = await signIn(email, password);
+
         if (error) {
           if (error.message.includes('Invalid login credentials')) {
             toast.error('Invalid email or password');
+          } else if (error.message.includes('Email not confirmed')) {
+            toast.error('Please verify your email before signing in.');
           } else {
             toast.error(error.message);
           }
