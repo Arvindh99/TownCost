@@ -1,115 +1,123 @@
-import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/integrations/supabase/client';
-import type { Location } from '@/types/database';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from 'recharts';
+import { useCurrency } from '@/hooks/useCurrency';
 
-export function useLocations() {
-  return useQuery({
-    queryKey: ['locations'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('locations')
-        .select('*')
-        .order('country')
-        .order('state')
-        .order('city');
-
-      if (error) throw error;
-      return data as Location[];
-    },
-  });
+interface MonthlyTrendProps {
+  data: Array<{
+    month: string;
+    amount: number;
+  }>;
+  currencyCode: string;
 }
 
-// Get unique countries from locations
-export function useCountries() {
-  return useQuery({
-    queryKey: ['countries'],
-    queryFn: async () => {
-      const { data, error } = await supabase.from('v_countries').select('*');
+function extractCurrencyCode(value?: string) {
+  if (!value) return 'USD';
 
-      if (error) throw error;
-
-      return data.map((row) => ({ id: row.country, name: row.country }));
-    },
-  });
+  // Matches text inside (...)
+  const match = value.match(/\(([^)]+)\)/);
+  return match ? match[1] : value;
 }
 
-// Get unique states for a country
-export function useStates(country?: string) {
-  return useQuery({
-    queryKey: ['states', country],
-    queryFn: async () => {
-      if (!country) return [];
-      const { data, error } = await supabase
-        .from('v_states')
-        .select('state')
-        .eq('country', country);
+export function MonthlyTrend({ data, currencyCode }: MonthlyTrendProps) {
+  const parsedCurrencyCode = extractCurrencyCode(currencyCode);
+  const { format: formatCurrency, symbol } = useCurrency(parsedCurrencyCode);
 
-      if (error) throw error;
+  if (data.length === 0) {
+    return (
+      <Card className="shadow-card">
+        <CardHeader>
+          <CardTitle className="font-display text-lg">
+            Monthly Spending Trend
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="flex items-center justify-center h-64">
+          <p className="text-muted-foreground">No data available yet</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
-      return data.map((row) => ({ id: row.state, name: row.state }));
-    },
-    enabled: !!country,
-  });
-}
-
-// Get unique cities for a country and state
-export function useCities(country?: string, state?: string) {
-  return useQuery({
-    queryKey: ['cities', country, state],
-    queryFn: async () => {
-      if (!country || !state) return [];
-      const { data, error } = await supabase
-        .from('v_cities')
-        .select('city')
-        .eq('country', country)
-        .eq('state', state);
-
-      if (error) throw error;
-
-      return data.map((row) => ({ id: row.city, name: row.city }));
-    },
-    enabled: !!country && !!state,
-  });
-}
-
-// Get full location record by country, state, city
-export function useLocationByAddress(
-  country: string | undefined,
-  state: string | undefined,
-  city: string | undefined
-) {
-  return useQuery({
-    queryKey: ['location-by-address', country, state, city],
-    enabled: !!country && !!state && !!city,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('locations')
-        .select('*')
-        .eq('country', country!)
-        .eq('state', state!)
-        .eq('city', city!)
-        .single();
-
-      if (error) throw error;
-      return data as Location;
-    },
-  });
-}
-
-// Get location by ID
-export function useLocationById(locationId: string | undefined | null) {
-  return useQuery({
-    queryKey: ['location-by-id', locationId],
-    enabled: !!locationId,
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('locations')
-        .select('*')
-        .eq('id', locationId!)
-        .single();
-
-      if (error) throw error;
-      return data as Location;
-    },
-  });
+  return (
+    <Card className="shadow-card">
+      <CardHeader>
+        <CardTitle className="font-display text-lg">
+          Monthly Spending Trend
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="h-64">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart
+              data={data}
+              margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+            >
+              <defs>
+                <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
+                  <stop
+                    offset="5%"
+                    stopColor="hsl(162, 63%, 41%)"
+                    stopOpacity={0.3}
+                  />
+                  <stop
+                    offset="95%"
+                    stopColor="hsl(162, 63%, 41%)"
+                    stopOpacity={0}
+                  />
+                </linearGradient>
+              </defs>
+              <CartesianGrid
+                strokeDasharray="3 3"
+                stroke="hsl(var(--border))"
+                vertical={false}
+              />
+              <XAxis
+                dataKey="month"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+              />
+              <YAxis
+                width={50}
+                axisLine={false}
+                tickLine={false}
+                tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
+                tickFormatter={(value) =>
+                  `${symbol}${
+                    value >= 1000 ? `${(value / 1000).toFixed(0)}k` : value
+                  }`
+                }
+              />
+              <Tooltip
+                formatter={(value: number) => [formatCurrency(value), 'Total']}
+                contentStyle={{
+                  backgroundColor: 'hsl(var(--card))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px',
+                  boxShadow: 'var(--shadow-card)',
+                  fontSize: 11,
+                  fontWeight: 500,
+                }}
+              />
+              <Area
+                type="monotone"
+                dataKey="amount"
+                stroke="hsl(162, 63%, 41%)"
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#colorAmount)"
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </CardContent>
+    </Card>
+  );
 }
