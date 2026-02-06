@@ -78,34 +78,38 @@ export function useLocationByAddress(
   state: string | undefined,
   city: string | undefined
 ) {
-  const { data: locations, isLoading, error } = useLocations();
+  return useQuery({
+    queryKey: ['location-by-address', country, state, city],
+    enabled: !!country && !!state && !!city,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('locations')
+        .select('*')
+        .eq('country', country!)
+        .eq('state', state!)
+        .eq('city', city!)
+        .single();
 
-  const location =
-    locations && country && state && city
-      ? locations.find(
-          (l) => l.country === country && l.state === state && l.city === city
-        ) || null
-      : null;
-
-  return {
-    data: location,
-    isLoading: isLoading && !!country && !!state && !!city,
-    error,
-  };
+      if (error) throw error;
+      return data as Location;
+    },
+  });
 }
 
 // Get location by ID
 export function useLocationById(locationId: string | undefined | null) {
-  const { data: locations, isLoading, error } = useLocations();
+  return useQuery({
+    queryKey: ['location-by-id', locationId],
+    enabled: !!locationId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('locations')
+        .select('*')
+        .eq('id', locationId!)
+        .single();
 
-  const location =
-    locations && locationId
-      ? locations.find((l) => l.id === locationId) || null
-      : null;
-
-  return {
-    data: location,
-    isLoading: isLoading && !!locationId,
-    error,
-  };
+      if (error) throw error;
+      return data as Location;
+    },
+  });
 }
