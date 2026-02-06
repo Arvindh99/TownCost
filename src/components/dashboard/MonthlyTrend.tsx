@@ -18,8 +18,17 @@ interface MonthlyTrendProps {
   currencyCode: string;
 }
 
+function extractCurrencyCode(value?: string) {
+  if (!value) return 'USD';
+
+  // Matches text inside (...)
+  const match = value.match(/\(([^)]+)\)/);
+  return match ? match[1] : value;
+}
+
 export function MonthlyTrend({ data, currencyCode }: MonthlyTrendProps) {
-  const { format: formatCurrency, symbol } = useCurrency(currencyCode);
+  const parsedCurrencyCode = extractCurrencyCode(currencyCode);
+  const { format: formatCurrency, symbol } = useCurrency(parsedCurrencyCode);
 
   if (data.length === 0) {
     return (
@@ -76,6 +85,7 @@ export function MonthlyTrend({ data, currencyCode }: MonthlyTrendProps) {
                 tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
               />
               <YAxis
+                width={50}
                 axisLine={false}
                 tickLine={false}
                 tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }}
