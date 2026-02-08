@@ -61,7 +61,7 @@ export default function About() {
                 use of TownCost.
               </p>
               <Button asChild className="w-full" variant="outline">
-                <a href="https://github.com/Arvindh99/TownCost/blob/main/documentation.pdf" target="_blank" rel="noopener noreferrer">
+                <a href="https://github.com/Arvindh99/TownCost/blob/main/docs/TownCost%20Documentation.pdf" target="_blank" rel="noopener noreferrer">
                   Read Docs <ExternalLink className="ml-2 h-4 w-4" />
                 </a>
               </Button>
