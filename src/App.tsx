@@ -1,7 +1,7 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
-import { AuthProvider } from '@/contexts/AuthContext';
+import { AuthProvider, useAuth } from '@/contexts/AuthContext';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
@@ -12,7 +12,6 @@ import Dashboard from '@/pages/Dashboard';
 import Expenses from '@/pages/Expenses';
 import Insights from '@/pages/Insights';
 import Profile from '@/pages/Profile';
-import NotFound from '@/pages/NotFound';
 import About from '@/pages/About';
 
 const queryClient = new QueryClient({
@@ -24,22 +23,38 @@ const queryClient = new QueryClient({
   },
 });
 
+function AppRoutes() {
+  const { user } = useAuth();
+
+  return (
+    <Routes>
+      <Route path="/" element={<Index />} />
+
+      {/* Auth page: redirect to / if user is logged in */}
+      <Route
+        path="/auth"
+        element={user ? <Navigate to="/" replace /> : <Auth />}
+      />
+
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/expenses" element={<Expenses />} />
+      <Route path="/insights" element={<Insights />} />
+      <Route path="/profile" element={<Profile />} />
+      <Route path="/about" element={<About />} />
+
+      {/* Redirect all unknown routes to homepage */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}
+
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <BrowserRouter>
           <TooltipProvider>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/expenses" element={<Expenses />} />
-              <Route path="/insights" element={<Insights />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/about" element={<About />} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+            <AppRoutes />
           </TooltipProvider>
 
           {/* Global UI */}
