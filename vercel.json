@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "destination": "https://towncost.in/$1",
+      "permanent": true
+    }
+  ]
+}
